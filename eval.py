@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from safetensors.torch import load_model
 
-from utils import ImageDatasetNPZ, default_transform
+from utils import ImageDatasetNPZ, default_transform, DefaultTransform
 from utils import extract_features_and_labels, run_knn_probe, run_linear_probe
 
 
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     # Evaluate model
     knn_accuracy, probe_accuracy = evaluate_model(model, train_dataloader, val_dataloader)
-    print(f"k-NN Accuracy: {knn_accuracy:.2f}%")
-    print(f"Linear Probe Accuracy: {probe_accuracy:.2f}%")
+    print(f"k-NN Accuracy: {knn_accuracy*100:.2f}%")
+    print(f"Linear Probe Accuracy: {probe_accuracy*100:.2f}%")
     
     print("Evaluation completed.")
