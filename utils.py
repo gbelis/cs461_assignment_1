@@ -29,14 +29,14 @@ from sklearn.metrics import accuracy_score
 
 
 
-default_transform = T.Compose([
+basic_transform = T.Compose([
     T.ToTensor(),
 ])
 
 class ImageDatasetNPZ(Dataset):
-    def __init__(self, data_path: Union[str, Path], transform=default_transform):
+    def __init__(self, data_path: Union[str, Path], transform=None):
         self.load_from_npz(data_path)
-        self.transform = transform
+        self.transform = transform if transform is not None else basic_transform
 
     def load_from_npz(self, data_path: Union[str, Path]):
         data = np.load(data_path)
@@ -180,15 +180,18 @@ class BYOLTransform:
             x = Image.fromarray(x)
         return self.train_transform(x), self.train_transform(x)
 
-class default_transform:
-    
+class DefaultTransform:
+
     def __init__(self):
         self.transform = T.ToTensor()
-        
+
     def __call__(self, x):
         if isinstance(x, np.ndarray):
             x = Image.fromarray(x)
         return self.transform(x)
+
+# Create a default instance for convenience
+default_transform = DefaultTransform()
 
 def byol_collate_fn(batch):
     xs1, xs2, ys = [], [], []
@@ -294,10 +297,11 @@ def check_representation_collapse(model, dataloader, num_batches=10):
 
 
 def check_projector_output(model, dataloader):
+    device = next(model.parameters()).device
     model.eval()
     all_proj = []
     all_pred = []
-    
+
     with torch.no_grad():
         for i, batch in enumerate(dataloader):
             if i >= 5:
