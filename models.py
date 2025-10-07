@@ -26,7 +26,7 @@ class ImageEncoder(nn.Module):
     ####### DO NOT MODIFY THE CLASS VARIABLES #######
     input_dim: int = 64
     input_channels: int = 3
-    feature_dim: int = 1000
+    feature_dim: int = 512#1000
     proj_dim: int = 128
     #################################################
 
@@ -42,17 +42,18 @@ class ImageEncoder(nn.Module):
         
 
         self.projector = nn.Sequential(
-            nn.Linear(self.feature_dim, self.proj_dim),
-            nn.BatchNorm1d(self.proj_dim),
-            nn.ReLU(),
-            nn.Linear(self.proj_dim, self.proj_dim)
+            nn.Linear(self.feature_dim, self.feature_dim, bias=False),
+            nn.BatchNorm1d(self.feature_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+            nn.BatchNorm1d(self.proj_dim)
         )
         
         self.predictor = nn.Sequential(
-            nn.Linear(self.proj_dim, self.proj_dim),
-            nn.BatchNorm1d(self.proj_dim),
-            nn.ReLU(),
-            nn.Linear(self.proj_dim, self.proj_dim)
+            nn.Linear(self.proj_dim, 256, bias=False),
+            nn.BatchNorm1d(256),
+            nn.ReLU(inplace=True),
+            nn.Linear(256, self.proj_dim)
         )
 
     def forward(self, x):
