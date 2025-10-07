@@ -162,7 +162,7 @@ class EMA():
 
 class BYOLTransform:
 
-    def __init__(self, size=32, s=0.5, blur_p=0.5):
+    def __init__(self, size=32, s=0.5, blur_p=0.3):
         color_jitter = T.ColorJitter(0.8*s, 0.8*s, 0.8*s, 0.2*s)
         k = 3 if size <= 32 else 5
         base = [
@@ -170,7 +170,7 @@ class BYOLTransform:
             T.RandomHorizontalFlip(),
             T.RandomApply([color_jitter], p=0.8),
             T.RandomGrayscale(p=0.2),
-            # T.RandomApply([T.GaussianBlur(kernel_size=k, sigma=(0.1, 2.0))], p=blur_p),
+            T.RandomApply([T.GaussianBlur(kernel_size=k, sigma=(0.1, 1.0))], p=blur_p),
             T.ToTensor()
         ]
         self.train_transform = T.Compose(base)
@@ -229,7 +229,7 @@ def embedding_metrics(model, dataloader, num_batches=5):
     normalized_2 = F.normalize(all_features_2, dim=1)
 
     
-    similarities = normalized_1 @ normalized_1.T
+    similarities = normalized_1 @ normalized_2.T
 
     n = similarities.size(0)
     mask = ~torch.eye(n, dtype=bool, device=similarities.device)
@@ -238,7 +238,9 @@ def embedding_metrics(model, dataloader, num_batches=5):
     for f1, f2 in zip(normalized_1, normalized_2):
         positive_sims.append(torch.dot(f1, f2).item())
     
-    embedding_var = (torch.var(normalized_1, dim=0).mean().item() + torch.var(normalized_2, dim=0).mean().item())/2
+    var1 = torch.var(all_features_1, dim=0).mean().item()
+    var2 = torch.var(all_features_2, dim=0).mean().item()
+    embedding_var = 0.5 * (var1 + var2)
     
     
     return {'mean_sim': off_diag_sims.mean(), 'mean_pos_sim': np.mean(positive_sims), 'embedding_var': embedding_var}
